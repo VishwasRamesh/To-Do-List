@@ -4,6 +4,7 @@ const express = require('express');
 const bodeParser = require('body-parser');
 const mongoose = require('mongoose');
 const date = require('./date');
+// const ejsLint = require('ejs-lint');
 
 const app = express();
 
@@ -75,6 +76,21 @@ app.post('/', (req,res) => {
     item.save();
 
     res.redirect('/');
+});
+
+app.post('/delete', (req, res) => {
+    // console.log(req.body.checkbox);
+    const checkedItemId = req.body.checkbox;
+
+    Item.findByIdAndRemove(checkedItemId, (err) => {
+        if(err){
+            console.log(err);
+        } else{
+            console.log("Successfully removed item");
+            res.redirect('/');
+        }
+    });
+
 });
 
 
