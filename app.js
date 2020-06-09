@@ -1,5 +1,3 @@
-//jshint esversion:6
-
 const express = require('express');
 const bodeParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -9,6 +7,9 @@ const date = require('./date');
 const app = express();
 
 app.set('view engine', 'ejs');
+
+app.use(bodeParser.urlencoded({extended: true}));
+app.use(express.static("public"));
 
 // let items = ["Buy Food", "Cook Food", "Eat Food"];
 // const workItems = [];
@@ -39,8 +40,13 @@ const item3 = new Item({
 
 const defaultItems = [item1, item2, item3];
 
-app.use(bodeParser.urlencoded({extended: true}));
-app.use(express.static("public"));
+//for custom routes
+const listSchema = new mongoose.Schema({
+    name: String,
+    items:[itemsSchema]
+});
+
+const List = mongoose.model("List", listSchema);
 
 app.get('/', (req,res) => {
 
@@ -64,6 +70,37 @@ app.get('/', (req,res) => {
             });
         }       
     });   
+
+});
+
+app.get('/:customListName', (req,res) =>{
+    //console.log(req.params.customListName);
+    const customListName = req.params.customListName;
+
+    List.findOne({name: customListName}, (err, foundList) => {
+        if(!err){
+            if(!foundList){
+                //create a new list
+                const list = new List({
+                    name: customListName,
+                    items: defaultItems
+                });
+            
+                list.save();
+
+                res.redirect('/' + customListName);
+
+            } else{
+                //show an existing lits
+                res.render('list', {
+                    listTitle: foundList.name,
+                    newListItem: foundList.items
+                });
+            }
+        }
+    });
+
+   
 
 });
 
@@ -91,14 +128,6 @@ app.post('/delete', (req, res) => {
         }
     });
 
-});
-
-
-app.get('/work', (req,res) =>{
-    res.render('list', {
-        listTitle:'Work List',
-        newListItem: workItems
-    });
 });
 
 // app.post('/work', (req,res) => {
